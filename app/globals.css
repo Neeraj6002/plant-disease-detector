@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/...');
+@import "tailwindcss";
+
+/* rest of your CSS */
+@theme {
+  --color-bg:       #0e120d;
+  --color-surface:  #161b14;
+  --color-border:   #2a3327;
+  --color-text:     #e8ede5;
+  --color-muted:    #7a8f76;
+  --color-accent:   #7ec850;
+  --color-accent2:  #b5e48c;
+  --color-danger:   #e05c5c;
+  --color-warn:     #e6a817;
+}
+
+:root {
+  --bg:           #0e120d;
+  --surface:      #161b14;
+  --border:       #2a3327;
+  --text:         #e8ede5;
+  --muted:        #7a8f76;
+  --accent:       #7ec850;
+  --accent2:      #b5e48c;
+  --danger:       #e05c5c;
+  --warn:         #e6a817;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono:    'DM Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
