@@ -1,62 +1,84 @@
 export default function Footer() {
   return (
-    <footer
-      style={{
-        padding: '24px 48px',
-        borderTop: '1px solid #E8E8E4',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexShrink: 0,
-        backgroundColor: '#FBFBF9', // Using the Neutral background token from your UI system
-        gap: 16,
-        fontFamily: '"Plus Jakarta Sans", sans-serif', // Using the Label/Body font token
-      }}
-    >
-      {/* Branding and Copyright on the Left */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span 
-          style={{ 
-            fontSize: 12, 
-            fontWeight: 600, 
-            color: '#2E6F40', // Primary Green token
-            letterSpacing: '-0.01em'
-          }}
-        >
-          Botanical Intelligence
-        </span>
-        <span 
-          style={{ 
-            fontSize: 11, 
-            color: '#8A8A80', 
-            whiteSpace: 'nowrap', 
-            flexShrink: 0 
-          }}
-        >
-          © 2024 Botanical Intelligence. A Scientific Publishing Initiative.
-        </span>
-      </div>
+    <>
+      <style>{`
+        .footer {
+          padding: 20px 48px;
+          border-top: 1px solid #E8E8E4;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-shrink: 0;
+          background-color: #FBFBF9;
+          gap: 16px;
+          font-family: "Plus Jakarta Sans", sans-serif;
+        }
+        .footer-links {
+          display: flex;
+          gap: 24px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+        .footer-link {
+          font-size: 11.5px;
+          color: #6B6B63;
+          text-decoration: none;
+          transition: color 0.15s ease;
+          white-space: nowrap;
+        }
 
-      {/* Navigation Links on the Right */}
-      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        {['Technical Documentation', 'Botanical Journal', 'Privacy Policy', 'Methodology'].map(link => (
-          <a
-            key={link}
-            href="#"
-            style={{
-              fontSize: 11.5,
-              color: '#6B6B63',
-              textDecoration: 'none',
-              transition: 'color 0.15s ease',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseOver={e => (e.currentTarget.style.color = '#2E6F40')} // Hovers into Primary Green
-            onMouseOut={e => (e.currentTarget.style.color = '#6B6B63')}
-          >
-            {link}
-          </a>
-        ))}
-      </div>
-    </footer>
+        @media (max-width: 768px) {
+          .footer {
+            padding: 16px 20px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .footer-links {
+            gap: 16px;
+            justify-content: flex-start;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .footer {
+            padding: 14px 16px;
+          }
+          .footer-links {
+            gap: 12px;
+          }
+          .footer-link {
+            font-size: 11px;
+          }
+        }
+      `}</style>
+
+      <footer className="footer">
+        {/* Branding */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#2E6F40', letterSpacing: '-0.01em' }}>
+            Botanical Intelligence
+          </span>
+          <span style={{ fontSize: 11, color: '#8A8A80', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            © 2024 Botanical Intelligence. A Scientific Publishing Initiative.
+          </span>
+        </div>
+
+        {/* Links */}
+        <div className="footer-links">
+          {['Technical Documentation', 'Botanical Journal', 'Privacy Policy', 'Methodology'].map(link => (
+            <a
+              key={link}
+              href="#"
+              className="footer-link"
+              onMouseOver={e => (e.currentTarget.style.color = '#2E6F40')}
+              onMouseOut={e => (e.currentTarget.style.color = '#6B6B63')}
+            >
+              {link}
+            </a>
+          ))}
+        </div>
+      </footer>
+    </>
   );
 }

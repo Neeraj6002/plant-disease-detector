@@ -6,28 +6,40 @@ interface NavbarProps {
 }
 
 export default function Navbar({ activeTab, onTabChange }: NavbarProps) {
-  const tabs: Array<{ id: 'history' | 'lab' | 'support'; label: string }> = [
-    { id: 'history', label: 'History' },
-    { id: 'lab', label: 'Lab' },
-    { id: 'support', label: 'Support' },
-  ];
-
   return (
-    <nav
-      style={{
-        height: 56,
-        background: '#fff',
-        borderBottom: '1px solid #E8E8E4',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 28px',
-        flexShrink: 0,
-      }}
-    >
-      {/* Brand + Tabs — LEFT group */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-        {/* Brand */}
+    <>
+      <style>{`
+        .navbar {
+          height: 56px;
+          background: #fff;
+          border-bottom: 1px solid #E8E8E4;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 28px;
+          flex-shrink: 0;
+        }
+        .navbar-brand-text {
+          font-family: var(--font-playfair), serif;
+          font-size: 16px;
+          font-weight: 700;
+          color: #1A241E;
+          letter-spacing: -0.01em;
+          white-space: nowrap;
+        }
+
+        @media (max-width: 480px) {
+          .navbar {
+            padding: 0 16px;
+          }
+          .navbar-brand-text {
+            font-size: 14px;
+          }
+        }
+      `}</style>
+
+      <nav className="navbar">
+        {/* Brand — LEFT */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div
             style={{
@@ -50,85 +62,44 @@ export default function Navbar({ activeTab, onTabChange }: NavbarProps) {
               <line x1="9" y1="13" x2="9" y2="16" stroke="white" strokeWidth="1.5" />
             </svg>
           </div>
-          <span
-            style={{
-              fontFamily: 'var(--font-playfair), serif',
-              fontSize: 16,
-              fontWeight: 700,
-              color: '#1A241E',
-              letterSpacing: '-0.01em',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Botanical Intelligence
-          </span>
+          <span className="navbar-brand-text">Botanical Intelligence</span>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                style={{
-                  padding: '5px 12px',
-                  fontSize: 13,
-                  fontFamily: 'var(--font-jakarta), sans-serif',
-                  fontWeight: isActive ? 600 : 400,
-                  color: isActive ? '#2E6F40' : '#6B6B63',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: isActive ? '2px solid #2E6F40' : '2px solid transparent',
-                  borderRadius: 0,
-                  cursor: 'pointer',
-                  lineHeight: '24px',
-                  transition: 'color 0.15s, border-color 0.15s',
-                  outline: 'none',
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Settings icon — RIGHT */}
-      <button
-        style={{
-          width: 32,
-          height: 32,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'transparent',
-          border: 'none',
-          borderRadius: 6,
-          cursor: 'pointer',
-          color: '#6B6B63',
-          transition: 'background 0.15s, color 0.15s',
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = '#F3F3F0';
-          (e.currentTarget as HTMLButtonElement).style.color = '#1A241E';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-          (e.currentTarget as HTMLButtonElement).style.color = '#6B6B63';
-        }}
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-          <path
-            d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      </button>
-    </nav>
+        {/* Settings icon — RIGHT */}
+        <button
+          style={{
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: 6,
+            cursor: 'pointer',
+            color: '#6B6B63',
+            transition: 'background 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = '#F3F3F0';
+            e.currentTarget.style.color = '#1A241E';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#6B6B63';
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+            <path
+              d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </nav>
+    </>
   );
 }

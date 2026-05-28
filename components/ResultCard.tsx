@@ -24,20 +24,143 @@ export default function ResultCard({ result, imageUrl, capturedAt, onNewAnalysis
 
   return (
     <>
-      <div style={{ padding: '32px 40px', maxWidth: 760, animation: 'fadeIn 0.4s ease both' }}>
+      <style>{`
+        .result-root {
+          padding: 32px 40px;
+          max-width: 760px;
+          width: 100%;
+          animation: fadeIn 0.4s ease both;
+        }
+        .result-header {
+          margin-bottom: 24px;
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .result-title {
+          font-family: var(--font-playfair), serif;
+          font-size: 28px;
+          font-weight: 700;
+          color: #1A241E;
+          letter-spacing: -0.02em;
+          margin-bottom: 4px;
+        }
+        .result-grid {
+          display: grid;
+          grid-template-columns: 1fr 1.2fr;
+          gap: 20px;
+          align-items: start;
+        }
+        .confidence-circle {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        /* Modal styles */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(10, 18, 12, 0.72);
+          backdrop-filter: blur(8px);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
+          animation: fadeIn 0.2s ease both;
+        }
+        .modal-box {
+          background: #fff;
+          border-radius: 16px;
+          width: 100%;
+          max-width: 780px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 32px 80px rgba(10,18,12,0.35);
+          animation: slideUp 0.25s ease both;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .modal-box::-webkit-scrollbar { display: none; }
+        .modal-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+        .modal-title {
+          font-family: var(--font-playfair), serif;
+          font-size: 26px;
+          font-weight: 700;
+          color: #1A241E;
+          letter-spacing: -0.02em;
+          margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+          .result-root {
+            padding: 20px 16px;
+          }
+          .result-title {
+            font-size: 20px;
+          }
+          .result-grid {
+            grid-template-columns: 1fr;
+          }
+          .confidence-circle {
+            width: 52px;
+            height: 52px;
+          }
+          .modal-box {
+            max-height: 95vh;
+            border-radius: 12px;
+          }
+          .modal-stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+          }
+          .modal-title {
+            font-size: 20px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .result-root {
+            padding: 14px 12px;
+          }
+          .result-title {
+            font-size: 17px;
+          }
+          .confidence-circle {
+            width: 46px;
+            height: 46px;
+          }
+          .modal-stats-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+          .modal-overlay {
+            padding: 0;
+            align-items: flex-end;
+          }
+          .modal-box {
+            border-radius: 16px 16px 0 0;
+            max-height: 92vh;
+          }
+        }
+      `}</style>
+
+      <div className="result-root">
         {/* Header */}
-        <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <div>
-            <h1
-              style={{
-                fontFamily: 'var(--font-playfair), serif',
-                fontSize: 28,
-                fontWeight: 700,
-                color: '#1A241E',
-                letterSpacing: '-0.02em',
-                marginBottom: 4,
-              }}
-            >
+        <div className="result-header">
+          <div style={{ minWidth: 0 }}>
+            <h1 className="result-title">
               {result.plantName} {result.diseaseName !== 'Healthy' ? result.diseaseName : '— Healthy'}
             </h1>
             {result.scientificName && (
@@ -79,19 +202,10 @@ export default function ResultCard({ result, imageUrl, capturedAt, onNewAnalysis
 
           {/* Confidence circle */}
           <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              border: `3px solid ${severity.color}`,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
+            className="confidence-circle"
+            style={{ border: `3px solid ${severity.color}` }}
           >
-            <span style={{ fontSize: 16, fontWeight: 800, color: severity.color, lineHeight: 1 }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: severity.color, lineHeight: 1 }}>
               {result.confidence}%
             </span>
             <span style={{ fontSize: 8, color: '#B0B0A8', letterSpacing: '0.04em', marginTop: 1 }}>MATCH</span>
@@ -99,7 +213,7 @@ export default function ResultCard({ result, imageUrl, capturedAt, onNewAnalysis
         </div>
 
         {/* Main grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 20, alignItems: 'start' }}>
+        <div className="result-grid">
           {/* Left: image */}
           <div>
             <div
@@ -170,7 +284,7 @@ export default function ResultCard({ result, imageUrl, capturedAt, onNewAnalysis
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   style={{
-                    padding: '8px 16px',
+                    padding: '8px 14px',
                     border: 'none',
                     background: 'transparent',
                     fontSize: 12,
@@ -268,318 +382,266 @@ export default function ResultCard({ result, imageUrl, capturedAt, onNewAnalysis
               >
                 Full Report
               </button>
-             
             </div>
           </div>
         </div>
       </div>
 
       {/* ── FULL REPORT MODAL ── */}
-     {showFullReport && (
-  <div
-    onClick={e => { if (e.target === e.currentTarget) setShowFullReport(false); }}
-    style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(10, 18, 12, 0.72)',
-      backdropFilter: 'blur(8px)',
-      zIndex: 1000,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px 16px',
-      animation: 'fadeIn 0.2s ease both',
-    }}
-  >
-    {/* Injecting the scrollbar hiding style rules */}
-    <style>{`
-      .hide-scrollbar::-webkit-scrollbar {
-        display: none; /* Safari and Chrome */
-      }
-      .hide-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-      }
-    `}</style>
-
-    <div
-      className="hide-scrollbar" /* Added class name here */
-      style={{
-        background: '#fff',
-        borderRadius: 16,
-        width: '100%',
-        maxWidth: 780,
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        boxShadow: '0 32px 80px rgba(10,18,12,0.35)',
-        animation: 'slideUp 0.25s ease both',
-      }}
-    >
-      {/* Modal header bar */}
-      <div
-        style={{
-          background: '#1A241E',
-          borderRadius: '16px 16px 0 0',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 9, color: '#D4E7D7', letterSpacing: '0.1em', fontWeight: 700 }}>
-            ⬡ BOTANICAL INTELLIGENCE — FULL SPECIMEN REPORT
-          </span>
-        </div>
-        <button
-          onClick={() => setShowFullReport(false)}
-          style={{
-            background: 'rgba(212,231,215,0.12)',
-            border: '1px solid rgba(212,231,215,0.2)',
-            borderRadius: 6,
-            color: '#D4E7D7',
-            width: 28,
-            height: 28,
-            cursor: 'pointer',
-            fontSize: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'background 0.15s',
-          }}
-          onMouseOver={e => (e.currentTarget.style.background = 'rgba(212,231,215,0.22)')}
-          onMouseOut={e => (e.currentTarget.style.background = 'rgba(212,231,215,0.12)')}
-          aria-label="Close"
+      {showFullReport && (
+        <div
+          className="modal-overlay"
+          onClick={e => { if (e.target === e.currentTarget) setShowFullReport(false); }}
         >
-          ✕
-        </button>
-      </div>
-
-      {/* Modal body */}
-      <div style={{ padding: '28px 32px' }}>
-
-        {/* Title row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-          <div>
-            <h2
+          <div className="modal-box">
+            {/* Modal header bar */}
+            <div
               style={{
-                fontFamily: 'var(--font-playfair), serif',
-                fontSize: 26,
-                fontWeight: 700,
-                color: '#1A241E',
-                letterSpacing: '-0.02em',
-                marginBottom: 4,
+                background: '#1A241E',
+                borderRadius: '16px 16px 0 0',
+                padding: '16px 24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
               }}
             >
-              {result.plantName} {result.diseaseName}
-            </h2>
-            {result.scientificName && (
-              <p style={{ fontSize: 13, color: '#6B6B63', fontStyle: 'italic', marginBottom: 10 }}>
-                {result.scientificName}
-              </p>
-            )}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span
-                style={{
-                  background: severity.bg,
-                  color: severity.color,
-                  border: `1px solid ${severity.color}30`,
-                  borderRadius: 20,
-                  padding: '3px 12px',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                }}
-              >
-                {severity.label}
+              <span style={{ fontSize: 9, color: '#D4E7D7', letterSpacing: '0.1em', fontWeight: 700 }}>
+                ⬡ BOTANICAL INTELLIGENCE — FULL SPECIMEN REPORT
               </span>
-              {result.tags.map(tag => (
-                <span
-                  key={tag}
+              <button
+                onClick={() => setShowFullReport(false)}
+                style={{
+                  background: 'rgba(212,231,215,0.12)',
+                  border: '1px solid rgba(212,231,215,0.2)',
+                  borderRadius: 6,
+                  color: '#D4E7D7',
+                  width: 28,
+                  height: 28,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div style={{ padding: '24px 24px' }}>
+              {/* Title row */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <h2 className="modal-title">
+                    {result.plantName} {result.diseaseName}
+                  </h2>
+                  {result.scientificName && (
+                    <p style={{ fontSize: 13, color: '#6B6B63', fontStyle: 'italic', marginBottom: 10 }}>
+                      {result.scientificName}
+                    </p>
+                  )}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span
+                      style={{
+                        background: severity.bg,
+                        color: severity.color,
+                        border: `1px solid ${severity.color}30`,
+                        borderRadius: 20,
+                        padding: '3px 12px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      {severity.label}
+                    </span>
+                    {result.tags.map(tag => (
+                      <span
+                        key={tag}
+                        style={{
+                          background: '#F3F7F4',
+                          color: '#2E6F40',
+                          border: '1px solid #D4E7D7',
+                          borderRadius: 20,
+                          padding: '3px 12px',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div
                   style={{
-                    background: '#F3F7F4',
-                    color: '#2E6F40',
-                    border: '1px solid #D4E7D7',
-                    borderRadius: 20,
-                    padding: '3px 12px',
-                    fontSize: 11,
-                    fontWeight: 600,
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    border: `3px solid ${severity.color}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
                   }}
                 >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: '50%',
-              border: `3px solid ${severity.color}`,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <span style={{ fontSize: 18, fontWeight: 800, color: severity.color, lineHeight: 1 }}>
-              {result.confidence}%
-            </span>
-            <span style={{ fontSize: 8, color: '#B0B0A8', letterSpacing: '0.04em', marginTop: 2 }}>MATCH</span>
-          </div>
-        </div>
-
-        {/* Full image */}
-        <div
-          style={{
-            borderRadius: 12,
-            overflow: 'hidden',
-            position: 'relative',
-            background: '#1A241E',
-            marginBottom: 24,
-          }}
-        >
-          <img
-            src={imageUrl}
-            alt="Full specimen"
-            style={{ width: '100%', maxHeight: 360, objectFit: 'cover', display: 'block' }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 10,
-              left: 10,
-              background: 'rgba(26,36,30,0.85)',
-              backdropFilter: 'blur(6px)',
-              borderRadius: 4,
-              padding: '4px 10px',
-              fontSize: 9,
-              color: '#D4E7D7',
-              letterSpacing: '0.06em',
-              fontWeight: 600,
-              border: '1px solid rgba(46,111,64,0.3)',
-            }}
-          >
-            ⬡ SCANNING_ACTIVE_ELEMENTS_v4.2
-          </div>
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 10,
-              right: 10,
-              background: 'rgba(26,36,30,0.85)',
-              backdropFilter: 'blur(6px)',
-              borderRadius: 4,
-              padding: '4px 10px',
-              fontSize: 9,
-              color: '#D4E7D7',
-              letterSpacing: '0.06em',
-              fontWeight: 600,
-              border: '1px solid rgba(46,111,64,0.3)',
-            }}
-          >
-            Captured: {capturedAt || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-          </div>
-        </div>
-
-        {/* 3-col stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-          {[
-            { label: 'CONFIDENCE', value: `${result.confidence}%` },
-            { label: 'SEVERITY', value: result.severity },
-            { label: 'STATUS', value: result.isHealthy ? 'Healthy' : 'Diseased' },
-          ].map(stat => (
-            <div
-              key={stat.label}
-              style={{
-                background: '#F7F7F4',
-                border: '1px solid #E8E8E4',
-                borderRadius: 10,
-                padding: '14px 16px',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: '#B0B0A8', marginBottom: 6 }}>
-                {stat.label}
+                  <span style={{ fontSize: 16, fontWeight: 800, color: severity.color, lineHeight: 1 }}>
+                    {result.confidence}%
+                  </span>
+                  <span style={{ fontSize: 8, color: '#B0B0A8', letterSpacing: '0.04em', marginTop: 2 }}>MATCH</span>
+                </div>
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#1A241E' }}>{stat.value}</div>
-            </div>
-          ))}
-        </div>
 
-        {/* Diagnosis section */}
-        <Section title="Diagnosis">
-          <p style={{ fontSize: 13, color: '#2A2A25', lineHeight: 1.8 }}>{result.diagnosis}</p>
-          {result.observationNotes.length > 0 && (
-            <div
-              style={{
-                marginTop: 14,
-                background: '#F7F7F4',
-                borderRadius: 8,
-                padding: 14,
-                border: '1px solid #E8E8E4',
-              }}
-            >
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#2E6F40', letterSpacing: '0.04em', marginBottom: 8 }}>
-                OBSERVATION NOTES
+              {/* Full image */}
+              <div
+                style={{
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  position: 'relative',
+                  background: '#1A241E',
+                  marginBottom: 24,
+                }}
+              >
+                <img
+                  src={imageUrl}
+                  alt="Full specimen"
+                  style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 10,
+                    left: 10,
+                    background: 'rgba(26,36,30,0.85)',
+                    backdropFilter: 'blur(6px)',
+                    borderRadius: 4,
+                    padding: '4px 10px',
+                    fontSize: 9,
+                    color: '#D4E7D7',
+                    letterSpacing: '0.06em',
+                    fontWeight: 600,
+                    border: '1px solid rgba(46,111,64,0.3)',
+                  }}
+                >
+                  ⬡ SCANNING_ACTIVE_ELEMENTS_v4.2
+                </div>
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 10,
+                    right: 10,
+                    background: 'rgba(26,36,30,0.85)',
+                    backdropFilter: 'blur(6px)',
+                    borderRadius: 4,
+                    padding: '4px 10px',
+                    fontSize: 9,
+                    color: '#D4E7D7',
+                    letterSpacing: '0.06em',
+                    fontWeight: 600,
+                    border: '1px solid rgba(46,111,64,0.3)',
+                  }}
+                >
+                  Captured: {capturedAt || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </div>
               </div>
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {result.observationNotes.map((note, i) => (
-                  <li key={i} style={{ fontSize: 12, color: '#6B6B63', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <span style={{ color: '#2E6F40', marginTop: 2, flexShrink: 0 }}>•</span>
-                    {note}
-                  </li>
+
+              {/* Stats row */}
+              <div className="modal-stats-grid">
+                {[
+                  { label: 'CONFIDENCE', value: `${result.confidence}%` },
+                  { label: 'SEVERITY', value: result.severity },
+                  { label: 'STATUS', value: result.isHealthy ? 'Healthy' : 'Diseased' },
+                ].map(stat => (
+                  <div
+                    key={stat.label}
+                    style={{
+                      background: '#F7F7F4',
+                      border: '1px solid #E8E8E4',
+                      borderRadius: 10,
+                      padding: '14px 16px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: '#B0B0A8', marginBottom: 6 }}>
+                      {stat.label}
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#1A241E' }}>{stat.value}</div>
+                  </div>
                 ))}
-              </ul>
+              </div>
+
+              {/* Sections */}
+              <Section title="Diagnosis">
+                <p style={{ fontSize: 13, color: '#2A2A25', lineHeight: 1.8 }}>{result.diagnosis}</p>
+                {result.observationNotes.length > 0 && (
+                  <div
+                    style={{
+                      marginTop: 14,
+                      background: '#F7F7F4',
+                      borderRadius: 8,
+                      padding: 14,
+                      border: '1px solid #E8E8E4',
+                    }}
+                  >
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#2E6F40', letterSpacing: '0.04em', marginBottom: 8 }}>
+                      OBSERVATION NOTES
+                    </div>
+                    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {result.observationNotes.map((note, i) => (
+                        <li key={i} style={{ fontSize: 12, color: '#6B6B63', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                          <span style={{ color: '#2E6F40', marginTop: 2, flexShrink: 0 }}>•</span>
+                          {note}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </Section>
+
+              <Section title="Organic Remedy">
+                <p style={{ fontSize: 13, color: '#2A2A25', lineHeight: 1.8 }}>{result.organicRemedy}</p>
+              </Section>
+
+              <Section title="Chemical Treatment">
+                <p style={{ fontSize: 13, color: '#2A2A25', lineHeight: 1.8 }}>{result.chemicalRemedy}</p>
+              </Section>
+
+              {result.prevention && (
+                <Section title="Prevention">
+                  <p style={{ fontSize: 13, color: '#2A2A25', lineHeight: 1.8 }}>{result.prevention}</p>
+                </Section>
+              )}
+
+              {/* Close button */}
+              <div style={{ marginTop: 28, display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowFullReport(false)}
+                  style={{
+                    background: '#1A241E',
+                    color: '#D4E7D7',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '10px 28px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    letterSpacing: '0.04em',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.background = '#2E6F40')}
+                  onMouseOut={e => (e.currentTarget.style.background = '#1A241E')}
+                >
+                  Close Report
+                </button>
+              </div>
             </div>
-          )}
-        </Section>
-
-        {/* Organic remedy */}
-        <Section title="Organic Remedy">
-          <p style={{ fontSize: 13, color: '#2A2A25', lineHeight: 1.8 }}>{result.organicRemedy}</p>
-        </Section>
-
-        {/* Chemical remedy */}
-        <Section title="Chemical Treatment">
-          <p style={{ fontSize: 13, color: '#2A2A25', lineHeight: 1.8 }}>{result.chemicalRemedy}</p>
-        </Section>
-
-        {/* Prevention */}
-        {result.prevention && (
-          <Section title="Prevention">
-            <p style={{ fontSize: 13, color: '#2A2A25', lineHeight: 1.8 }}>{result.prevention}</p>
-          </Section>
-        )}
-
-        {/* Close button */}
-        <div style={{ marginTop: 28, display: 'flex', justifyContent: 'flex-end' }}>
-          <button
-            onClick={() => setShowFullReport(false)}
-            style={{
-              background: '#1A241E',
-              color: '#D4E7D7',
-              border: 'none',
-              borderRadius: 8,
-              padding: '10px 28px',
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: 'pointer',
-              letterSpacing: '0.04em',
-              transition: 'background 0.15s',
-            }}
-            onMouseOver={e => (e.currentTarget.style.background = '#2E6F40')}
-            onMouseOut={e => (e.currentTarget.style.background = '#1A241E')}
-          >
-            Close Report
-          </button>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
+
       <style>{`
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
@@ -591,22 +653,8 @@ export default function ResultCard({ result, imageUrl, capturedAt, onNewAnalysis
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 22 }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          marginBottom: 12,
-        }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            color: '#2E6F40',
-          }}
-        >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#2E6F40' }}>
           {title.toUpperCase()}
         </span>
         <div style={{ flex: 1, height: 1, background: '#E8E8E4' }} />
