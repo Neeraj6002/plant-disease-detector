@@ -3,23 +3,45 @@ import { DetectionResult } from '@/types/detection';
 const GEMINI_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-const DETECTION_PROMPT = `Analyze this plant leaf image for diseases.
+const DETECTION_PROMPT = `You are an expert plant pathologist with decades of field and laboratory experience identifying plant diseases worldwide.
+
+Carefully examine every detail of this leaf image:
+- Lesion shape, size, color, texture, and distribution pattern
+- Presence of pustules, spores, mold, or powdery coatings
+- Necrosis patterns (angular vs. circular vs. irregular)
+- Halo or ring patterns around lesions
+- Leaf edge vs. center vs. vein proximity of lesions
+- Color of spore masses (yellow, orange, rust-red, black, white)
+- Whether spots are raised/sunken/flat
+
+Based on these observations, identify the MOST SPECIFIC disease possible. Do NOT default to vague labels like "Unknown Fungal Leaf Spot" — always commit to your best clinical diagnosis with the evidence available.
+
+Common disease clues:
+- Red/orange raised pustules with yellow powder → Rust (Phakopsora, Puccinia, Uromyces)
+- White powdery coating on surface → Powdery Mildew (Erysiphe, Podosphaera)
+- Brown angular spots bounded by veins → Bacterial Leaf Spot or Angular Leaf Spot
+- Circular brown spots with yellow halo → Cercospora Leaf Spot or Early Blight
+- Dark water-soaked lesions spreading fast → Late Blight (Phytophthora)
+- Black sooty coating → Sooty Mold (Capnodium)
+- Yellowing with small brown dots → Downy Mildew or Septoria Leaf Spot
+- Irregular tan/brown dead patches → Anthracnose or Leaf Scorch
+
 Respond ONLY with a single valid JSON object — no markdown, no backticks, no explanation.
 
 Use exactly these fields:
 {
-  "plantName": "string — common name of the plant (e.g. Tomato, Oak, Fern), or 'Unknown' if unidentifiable",
-  "diseaseName": "string — name of the disease (e.g. Late Blight), or 'Healthy' if no disease found",
-  "scientificName": "string — scientific name of the disease or pathogen, or null if healthy/unknown",
+  "plantName": "string — identify the specific plant (e.g. Tomato, Chili, Mango, Soybean, Bean) based on leaf shape, texture, and veining. Say 'Unknown Plant' only if truly unidentifiable",
+  "diseaseName": "string — the most specific disease name possible (e.g. 'Asian Soybean Rust', 'Cercospora Leaf Spot', 'Bacterial Angular Leaf Spot'). Never use 'Unknown Fungal Leaf Spot' as a diagnosis",
+  "scientificName": "string — scientific name of the pathogen (e.g. Phakopsora pachyrhizi, Cercospora capsici), or null if healthy",
   "isHealthy": boolean,
-  "confidence": number — integer from 0 to 100 representing detection confidence,
+  "confidence": number — integer 0–100. Be honest: use 60–75 if partially confident, 76–90 if fairly confident, 91–100 only if highly certain,
   "severity": "None" | "Low" | "Moderate" | "Critical",
-  "diagnosis": "string — 2 to 3 sentence clinical description of the observed condition",
-  "organicRemedy": "string — specific organic or natural treatment steps",
-  "chemicalRemedy": "string — specific chemical treatment options with dosage guidance",
-  "prevention": "string — preventive measures to avoid recurrence",
-  "observationNotes": ["string", "string", "string"] — array of 3 concise visual observations,
-  "tags": ["string"] — short descriptor tags (e.g. FungalPathogen, CriticalSeverity, NeedsImmediateAction)
+  "diagnosis": "string — 2 to 3 sentence clinical description citing specific visual evidence you observed (pustule color, lesion pattern, spore type, etc.)",
+  "organicRemedy": "string — specific organic or natural treatment steps with application frequency",
+  "chemicalRemedy": "string — specific chemical treatment options with product names, active ingredients, and dosage guidance",
+  "prevention": "string — concrete preventive measures to avoid recurrence",
+  "observationNotes": ["string", "string", "string"] — exactly 3 specific visual observations you made from the image (e.g. 'Reddish-brown raised pustules on abaxial surface', 'Yellow urediniospore masses visible around lesions'),
+  "tags": ["string"] — short descriptor tags (e.g. FungalPathogen, RustDisease, CriticalSeverity, NeedsImmediateAction, BacterialInfection)
 }
 
 If the image does NOT contain a plant or leaf, return exactly this:
@@ -41,26 +63,80 @@ function validateDetectionResult(obj: unknown): obj is DetectionResult {
   );
 }
 
-function parseJSON(raw: string): DetectionResult {
-  // Strip markdown fences if present (safety net)
-  const cleaned = raw
+function repairAndParseJSON(raw: string): unknown {
+  // 1. Strip markdown fences
+  let cleaned = raw
     .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/, '')
+    .replace(/\s*```\s*$/i, '')
     .trim();
 
-  let parsed: unknown;
+  // 2. Try parsing as-is first
   try {
-    parsed = JSON.parse(cleaned);
+    return JSON.parse(cleaned);
   } catch {
-    // Try to extract the first {...} block if surrounding text slipped through
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    if (!match) {
-      throw new Error(
-        `Gemini returned non-JSON output. Preview: ${cleaned.slice(0, 200)}`
-      );
-    }
-    parsed = JSON.parse(match[0]);
+    // continue to repair steps
   }
+
+  // 3. Extract the first { ... } block (handles leading/trailing prose)
+  const braceStart = cleaned.indexOf('{');
+  const braceEnd = cleaned.lastIndexOf('}');
+
+  if (braceStart !== -1 && braceEnd !== -1 && braceEnd > braceStart) {
+    const extracted = cleaned.slice(braceStart, braceEnd + 1);
+    try {
+      return JSON.parse(extracted);
+    } catch {
+      // continue to repair steps
+    }
+  }
+
+  // 4. JSON is truncated — attempt to auto-close it
+  // Find everything from the first '{' to the end
+  const partial = braceStart !== -1 ? cleaned.slice(braceStart) : cleaned;
+
+  // Close any open string by finding unclosed quotes
+  let repaired = partial;
+
+  // Count open braces and brackets to close them
+  let openBraces = 0;
+  let openBrackets = 0;
+  let inString = false;
+  let escape = false;
+
+  for (const ch of repaired) {
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') openBraces++;
+    else if (ch === '}') openBraces--;
+    else if (ch === '[') openBrackets++;
+    else if (ch === ']') openBrackets--;
+  }
+
+  // If we're mid-string, close it
+  if (inString) repaired += '"';
+
+  // Remove trailing incomplete key-value (e.g. ends with a comma or partial key)
+  repaired = repaired.replace(/,\s*$/, '');
+  repaired = repaired.replace(/,\s*"[^"]*"\s*:\s*$/, '');
+  repaired = repaired.replace(/,\s*"[^"]*"\s*$/, '');
+
+  // Close open brackets and braces
+  repaired += ']'.repeat(Math.max(0, openBrackets));
+  repaired += '}'.repeat(Math.max(0, openBraces));
+
+  try {
+    return JSON.parse(repaired);
+  } catch {
+    throw new Error(
+      `Gemini returned unparseable output even after repair. Preview: ${cleaned.slice(0, 300)}`
+    );
+  }
+}
+
+function parseJSON(raw: string): DetectionResult {
+  const parsed = repairAndParseJSON(raw);
 
   if (!validateDetectionResult(parsed)) {
     throw new Error(
@@ -68,7 +144,7 @@ function parseJSON(raw: string): DetectionResult {
     );
   }
 
-  return parsed;
+  return parsed as DetectionResult;
 }
 
 export async function detectPlantDisease(
@@ -100,8 +176,8 @@ export async function detectPlantDisease(
           },
         ],
         generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 2048,
+          temperature: 0.2,
+          maxOutputTokens: 4096,  // increased to prevent truncation
           responseMimeType: 'application/json',
         },
       }),
