@@ -1,34 +1,34 @@
-// app/api/detect/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { detectPlantDisease } from '@/lib/openrouter';
 
-import { NextRequest, NextResponse } from "next/server";
-import { detectDisease } from "@/lib/openrouter";
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("image") as File | null;
+    const formData = await request.formData();
+    const file = formData.get('image') as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No image provided." }, { status: 400 });
+      return NextResponse.json({ error: 'No image provided' }, { status: 400 });
     }
 
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Only JPG and PNG images are supported." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid file type. JPG, PNG, or WebP only.' }, { status: 400 });
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File too large. Max 25MB.' }, { status: 400 });
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
 
-    const result = await detectDisease(base64, file.type);
+    const result = await detectPlantDisease(base64, file.type);
+
     return NextResponse.json(result);
-  } catch (err: unknown) {
-    console.error("Detection error:", err);
+  } catch (error) {
+    console.error('Detection error:', error);
     return NextResponse.json(
-      { error: "Failed to analyze image. Please try again." },
+      { error: error instanceof Error ? error.message : 'Detection failed' },
       { status: 500 }
     );
   }

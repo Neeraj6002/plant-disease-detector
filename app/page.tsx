@@ -1,207 +1,162 @@
-// app/page.tsx
+'use client';
 
-"use client";
+import { useState, useCallback } from 'react';
+import Navbar from '@/components/Navbar';
+import Sidebar from '@/components/Sidebar';
+import Footer from '@/components/Footer';
+import ImageUploader from '@/components/ImageUploader';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ResultCard from '@/components/ResultCard';
+import { DetectionResult, HistoryEntry } from '@/types/detection';
 
-import { useState } from "react";
-import ImageUploader from "@/components/ImageUploader";
-import ResultCard from "@/components/ResultCard";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import { DetectionResult } from "@/types/detection";
+type View = 'upload' | 'processing' | 'result';
 
-export default function Home() {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+export default function HomePage() {
+  const [view, setView] = useState<View>('upload');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [result, setResult] = useState<DetectionResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [activeHistoryId, setActiveHistoryId] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'history' | 'lab' | 'support'>('lab');
+  const [capturedAt, setCapturedAt] = useState<string>('');
 
-  const handleImageSelect = (f: File, prev: string) => {
-    setFile(f);
-    setPreview(prev);
-    setResult(null);
-    setError(null);
-  };
-
-  const handleDetect = async () => {
-    if (!file) return;
-    setLoading(true);
-    setError(null);
-    setResult(null);
+  const handleUpload = useCallback(async (file: File, preview: string) => {
+    setPreviewUrl(preview);
+    setError('');
+    setView('processing');
+    setCapturedAt(
+      new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    );
 
     try {
-      const form = new FormData();
-      form.append("image", file);
+      const formData = new FormData();
+      formData.append('image', file);
 
-      const res = await fetch("/api/detect", { method: "POST", body: form });
-      const data = await res.json();
+      const res = await fetch('/api/detect', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (!res.ok) throw new Error(data.error ?? "Detection failed.");
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Detection failed');
+      }
+
+      const data: DetectionResult = await res.json();
       setResult(data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
+      setView('result');
+
+      // Add to history
+      const entry: HistoryEntry = {
+        id: Date.now().toString(),
+        imageUrl: preview,
+        label: data.isHealthy ? data.plantName : `${data.plantName} ${data.diseaseName}`,
+        tag: data.isHealthy ? 'Healthy' : (data.tags[0] || data.severity),
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        result: data,
+      };
+      setHistory(prev => [entry, ...prev]);
+      setActiveHistoryId(entry.id);
+      setActiveTab('history');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setView('upload');
     }
+  }, []);
+
+  const handleSelectHistory = (entry: HistoryEntry) => {
+    setResult(entry.result);
+    setPreviewUrl(entry.imageUrl);
+    setActiveHistoryId(entry.id);
+    setView('result');
   };
 
-  const handleReset = () => {
-    setPreview(null);
-    setFile(null);
+  const handleNew = () => {
+    setView('upload');
     setResult(null);
-    setError(null);
+    setPreviewUrl('');
+    setError('');
+    setActiveHistoryId('');
+    setActiveTab('lab');
   };
 
   return (
-    <main
+    <div
       style={{
-        minHeight: "100vh",
-        padding: "3rem 1.5rem",
-        maxWidth: 680,
-        margin: "0 auto",
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#FAFAF8',
+        overflow: 'hidden',
       }}
     >
-      {/* Header */}
-      <header style={{ marginBottom: "3rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.5rem" }}>
-          <span style={{ color: "var(--accent)", fontSize: "1rem" }}>⬡</span>
-          <span style={{ color: "var(--muted)", fontSize: "0.65rem", letterSpacing: "0.15em" }}>
-            AI · PLANT PATHOLOGY
-          </span>
-        </div>
-        <h1
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(2rem, 5vw, 3rem)",
-            fontWeight: 300,
-            lineHeight: 1.1,
-            color: "var(--text)",
-          }}
-        >
-          Plant Disease<br />
-          <em style={{ fontStyle: "italic", color: "var(--accent)" }}>Detector</em>
-        </h1>
-        <p
-          style={{
-            color: "var(--muted)",
-            fontSize: "0.78rem",
-            marginTop: "0.8rem",
-            letterSpacing: "0.04em",
-            lineHeight: 1.7,
-          }}
-        >
-          Upload a leaf photo. Gemini Vision analyses it and returns disease,
-          severity, remedy &amp; prevention in seconds.
-        </p>
-      </header>
+      <Navbar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Upload area */}
-      {!preview ? (
-        <ImageUploader onImageSelect={handleImageSelect} disabled={loading} />
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {/* Preview */}
-          <div style={{ position: "relative", border: "1px solid var(--border)", borderRadius: "2px", overflow: "hidden" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={preview}
-              alt="Leaf preview"
-              style={{ width: "100%", maxHeight: 320, objectFit: "cover", display: "block" }}
-            />
-            <button
-              onClick={handleReset}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+        <Sidebar
+          history={history}
+          onSelect={handleSelectHistory}
+          onNew={handleNew}
+          activeId={activeHistoryId}
+        />
+
+        {/* Main content */}
+          <main 
+  style={{ 
+    flexGrow: 1, 
+    padding: '40px 56px 64px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    overflowX: 'hidden',
+    overflowY: 'auto',
+  }}
+>
+          {error && (
+            <div
               style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                background: "rgba(14,18,13,0.85)",
-                border: "1px solid var(--border)",
-                color: "var(--muted)",
-                fontSize: "0.7rem",
-                letterSpacing: "0.08em",
-                padding: "0.3rem 0.7rem",
-                cursor: "pointer",
-                borderRadius: "2px",
+                margin: '16px 48px 0',
+                padding: '12px 16px',
+                background: '#FEF2F2',
+                border: '1px solid #FCA5A5',
+                borderRadius: 8,
+                fontSize: 13,
+                color: '#C0392B',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
               }}
             >
-              × CLEAR
-            </button>
-          </div>
-
-          {/* Analyse button */}
-          {!result && !loading && (
-            <button
-              onClick={handleDetect}
-              style={{
-                background: "var(--accent)",
-                color: "var(--bg)",
-                border: "none",
-                borderRadius: "2px",
-                padding: "0.85rem",
-                fontSize: "0.8rem",
-                fontFamily: "var(--font-mono)",
-                letterSpacing: "0.12em",
-                cursor: "pointer",
-                fontWeight: 500,
-                transition: "opacity 0.15s",
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.opacity = "0.85")}
-              onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
-            >
-              ANALYSE LEAF →
-            </button>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
           )}
-        </div>
-      )}
 
-      {/* Loading */}
-      {loading && <LoadingSpinner />}
+          <div style={{ flex: 1 }}>
+            {view === 'upload' && (
+              <ImageUploader onUpload={handleUpload} isProcessing={false} />
+            )}
+            {view === 'processing' && (
+              <LoadingSpinner imageUrl={previewUrl} />
+            )}
+            {view === 'result' && result && (
+              <ResultCard
+                result={result}
+                imageUrl={previewUrl}
+                capturedAt={capturedAt}
+                onNewAnalysis={handleNew}
+              />
+            )}
+          </div>
+        </main>
+      </div>
 
-      {/* Error */}
-      {error && (
-        <p style={{ color: "var(--danger)", fontSize: "0.8rem", marginTop: "1rem", letterSpacing: "0.04em" }}>
-          ⚠ {error}
-        </p>
-      )}
-
-      {/* Result */}
-      {result && (
-        <div style={{ marginTop: "1.5rem" }}>
-          <ResultCard result={result} />
-          <button
-            onClick={handleReset}
-            style={{
-              marginTop: "1rem",
-              background: "transparent",
-              border: "1px solid var(--border)",
-              color: "var(--muted)",
-              borderRadius: "2px",
-              padding: "0.65rem 1.2rem",
-              fontSize: "0.72rem",
-              fontFamily: "var(--font-mono)",
-              letterSpacing: "0.1em",
-              cursor: "pointer",
-            }}
-          >
-            ← ANALYSE ANOTHER
-          </button>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer style={{ marginTop: "4rem", borderTop: "1px solid var(--border)", paddingTop: "1.5rem" }}>
-        <p style={{ color: "var(--muted)", fontSize: "0.65rem", letterSpacing: "0.1em" }}>
-          BUILT BY{" "}
-          <a
-            href="https://github.com/Neeraj6002"
-            style={{ color: "var(--accent)", textDecoration: "none" }}
-            target="_blank"
-            rel="noreferrer"
-          >
-            NEERAJ
-          </a>{" "}
-          · POWERED BY GEMINI 2.0 FLASH
-        </p>
-      </footer>
-    </main>
+      <Footer />
+    </div>
   );
 }

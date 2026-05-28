@@ -1,12 +1,23 @@
-// types/detection.ts
-
 export interface DetectionResult {
   plantName: string;
   diseaseName: string;
+  scientificName?: string;
   isHealthy: boolean;
-  confidence: number;        // 0–100
-  severity: "None" | "Low" | "Moderate" | "High" | "Critical";
-  remedy: string;
+  confidence: number;
+  severity: 'Low' | 'Moderate' | 'Critical' | 'None';
+  diagnosis: string;
+  organicRemedy: string;
+  chemicalRemedy: string;
   prevention: string;
-  isNotLeaf?: boolean;       // true if image isn't a plant leaf
+  observationNotes: string[];
+  tags: string[];
+}
+
+export interface HistoryEntry {
+  id: string;
+  imageUrl: string;
+  label: string;
+  tag: string;
+  date: string;
+  result: DetectionResult;
 }

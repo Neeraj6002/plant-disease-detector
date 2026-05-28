@@ -1,47 +1,94 @@
-@import url('https://fonts.googleapis.com/...');
-@import "tailwindcss";
-
-/* rest of your CSS */
-@theme {
-  --color-bg:       #0e120d;
-  --color-surface:  #161b14;
-  --color-border:   #2a3327;
-  --color-text:     #e8ede5;
-  --color-muted:    #7a8f76;
-  --color-accent:   #7ec850;
-  --color-accent2:  #b5e48c;
-  --color-danger:   #e05c5c;
-  --color-warn:     #e6a817;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --bg:           #0e120d;
-  --surface:      #161b14;
-  --border:       #2a3327;
-  --text:         #e8ede5;
-  --muted:        #7a8f76;
-  --accent:       #7ec850;
-  --accent2:      #b5e48c;
-  --danger:       #e05c5c;
-  --warn:         #e6a817;
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-mono:    'DM Mono', monospace;
+  --primary: #2E6F40;
+  --primary-dark: #1A241E;
+  --primary-light: #D4E7D7;
+  --primary-mid: #4a8f5c;
+  --neutral: #FBFBF9;
+  --neutral-100: #F3F3F0;
+  --neutral-200: #E8E8E4;
+  --neutral-400: #B0B0A8;
+  --neutral-600: #6B6B63;
+  --neutral-800: #2A2A25;
+  --surface: #F7F7F4;
+  --surface-dark: #1A241E;
+  --red: #C0392B;
+  --amber: #D97706;
+  --font-playfair: var(--font-playfair);
+  --font-jakarta: var(--font-jakarta);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-mono);
-  min-height: 100vh;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-::selection {
-  background: var(--accent);
-  color: var(--bg);
+html, body {
+  height: 100%;
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  background: var(--neutral);
+  color: var(--neutral-800);
+  -webkit-font-smoothing: antialiased;
 }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--surface); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+h1, h2, h3, .font-display {
+  font-family: var(--font-playfair), 'Playfair Display', serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--neutral-100); }
+::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.4; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+@keyframes scan-line {
+  0% { top: 0; opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in { animation: fadeIn 0.4s ease both; }
+.animate-pulse-ring { animation: pulse-ring 2s ease-in-out infinite; }
+.animate-spin { animation: spin 1s linear infinite; }
+
+.shimmer {
+  background: linear-gradient(90deg, var(--neutral-100) 25%, var(--neutral-200) 50%, var(--neutral-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Scan overlay */
+.scan-overlay::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  animation: scan-line 2s ease-in-out infinite;
+}
